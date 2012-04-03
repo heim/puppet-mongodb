@@ -1,2 +1,2 @@
-name 'portertech-mongodb'
-version '0.0.9'
+name 'heim-portertech-mongodb'
+version '1.0.0'

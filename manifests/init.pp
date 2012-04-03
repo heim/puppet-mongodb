@@ -24,17 +24,10 @@ class mongodb(
   $package = $mongodb::params::package
 ) inherits mongodb::params {
 
-  if !defined(Package["python-software-properties"]) {
-    package { "python-software-properties":
-      ensure => installed,
-    }
-  }
-
   exec { "10gen-apt-repo":
     path => "/bin:/usr/bin",
     command => "echo '${mongodb::params::repository}' >> /etc/apt/sources.list",
-    unless => "cat /etc/apt/sources.list | grep 10gen",
-    require => Package["python-software-properties"],
+    unless => "cat /etc/apt/sources.list | grep '${mongodb::params::repository}'",
   }
 
   exec { "10gen-apt-key":
@@ -61,10 +54,15 @@ class mongodb(
     ensure => running,
   }
 
-  file { "/etc/init/mongodb.conf":
+  file { "/etc/mongodb.conf":
     content => template("mongodb/mongodb.conf.erb"),
     mode => "0644",
     notify => Service["mongodb"],
   }
 
+  file { "/etc/init/mongodb.conf":
+    content => template("mongodb/init.mongodb.conf.erb"),
+    mode => "0644",
+    notify => Service["mongodb"],
+  }
 }

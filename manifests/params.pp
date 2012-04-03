@@ -14,7 +14,7 @@
 class mongodb::params {
   $repository = "deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen"
   $package = "mongodb-10gen"
-
+  $port = "27017"
   # Name of replica set (if any) to join
   $replSet = ""
 

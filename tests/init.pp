@@ -1,1 +1,2 @@
+import '../manifests/**' 
 include mongodb
