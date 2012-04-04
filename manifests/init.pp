@@ -1,16 +1,3 @@
-# Class: mongodb
-#
-# This class installs MongoDB (stable)
-#
-# Notes:
-#  This class is Ubuntu specific.
-#  By Sean Porter Consulting
-#
-# Actions:
-#  - Install MongoDB using a 10gen Ubuntu repository
-#  - Manage the MongoDB service
-#  - MongoDB can be part of a replica set
-#
 # Sample Usage:
 #  class { mongodb:
 #    replSet => "myReplicaSet",
@@ -21,8 +8,14 @@ class mongodb(
   $replSet = $mongodb::params::replSet,
   $ulimit_nofile = $mongodb::params::ulimit_nofile,
   $repository = $mongodb::params::repository,
-  $package = $mongodb::params::package
+  $package = $mongodb::params::package,
+  $port = $mongodb::params::port
 ) inherits mongodb::params {
+
+  #Resource ordering 
+  Exec["10gen-apt-repo"] -> Exec["10gen-apt-key"] -> Exec["update-apt"] -> Package[$mongodb::params::package] -> Service["mongodb"]
+  File["/etc/init/mongodb.conf"] ~> Service["mongodb"] <~ File["/etc/mongodb.conf"]
+
 
   exec { "10gen-apt-repo":
     path => "/bin:/usr/bin",
@@ -34,19 +27,16 @@ class mongodb(
     path => "/bin:/usr/bin",
     command => "apt-key adv --keyserver keyserver.ubuntu.com --recv 7F0CEB10",
     unless => "apt-key list | grep 10gen",
-    require => Exec["10gen-apt-repo"],
   }
 
   exec { "update-apt":
     path => "/bin:/usr/bin",
     command => "apt-get update",
     unless => "ls /usr/bin | grep mongo",
-    require => Exec["10gen-apt-key"],
   }
 
   package { $mongodb::params::package:
     ensure => installed,
-    require => Exec["update-apt"],
   }
 
   service { "mongodb":
@@ -57,12 +47,10 @@ class mongodb(
   file { "/etc/mongodb.conf":
     content => template("mongodb/mongodb.conf.erb"),
     mode => "0644",
-    notify => Service["mongodb"],
   }
 
   file { "/etc/init/mongodb.conf":
     content => template("mongodb/init.mongodb.conf.erb"),
     mode => "0644",
-    notify => Service["mongodb"],
   }
 }
